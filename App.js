@@ -1,21 +1,19 @@
-import { StatusBar } from 'expo-status-bar';
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useState, useEffect } from "react"
+import "./src/utils/firebaseConfig"
+import MainNav from "./src/navigation/MainNav"
+import { ThemeProvider } from "react-native-elements"
+import { Provider } from "react-redux"
+import store from "./src/redux/store"
+import theme from "./src/theme"
 
-export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
+console.disableYellowBox = true
+
+export default App = () => {
+	return (
+		<Provider store={store}>
+			<ThemeProvider theme={theme}>
+				<MainNav />
+			</ThemeProvider>
+		</Provider>
+	)
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

@@ -1,0 +1,13 @@
+{
+  "INVALID_PASSWORD": "Password must be between 6 to 10 characters which contain only characters, numeric digits, underscore and first character must be a letter",
+  "INVALID_EMAIL": "Email  not valid",
+  "INVALID_USERNAME": "Username Already Taken",
+  "INVALID_NAME": "Name Must Be at Least 8 Characters",
+  "INVALID_C_PASSWORD": "Passwords Does Not Match",
+  "INVALID_DOB": "Please Enter a Valid Date of Birth",
+  "USERNAME_INSTRUCTIONS": "Please select a unique username, other users will use this username to search and identify you",
+  "PASSWORD_INSTRUCTIONS": "Please select a strong password, strong passwords are combinations of numbers , lowercase, uppercase alphabets and special characters",
+  "INVALID_URL": "URL is not Valid",
+  "INCORRECT_PASSWORD": "Your Password does not match with our records."
+}
+
