@@ -22,10 +22,12 @@ import Functions from "../../functions/functions"
 import firebase from "firebase"
 import { connect } from "react-redux"
 import { MaterialIcons } from "@expo/vector-icons"
+import * as Notifications from "../../functions/notifications"
 
 class ChatDetail extends Component {
 	constructor(props) {
 		super(props)
+		this.list = null
 		this.state = {
 			message: "",
 			sending: false,
@@ -79,6 +81,14 @@ class ChatDetail extends Component {
 				}
 			})
 		}
+
+		Notifications.sendExpoNotification(receiver.pushToken, sender.name, message)
+
+		await firebase
+			.database()
+			.ref("notifications/")
+			.child(receiver.id)
+			.push({ sender: sender.name, message, timeStamp: Date.now() })
 	}
 
 	fetchMessagesInRealTime = () => {
@@ -338,23 +348,17 @@ class ChatDetail extends Component {
 				</Text>
 
 				<FlatList
+					ref={(ref) => {
+						this.list = ref
+					}}
+					onContentSizeChange={() => this.list.scrollToEnd({ animated: true })}
 					style={{
 						marginTop: 10,
 						marginLeft: 7,
 						marginRight: 7,
 						padding: 15,
 						backgroundColor: "#faf8f7",
-						elevation: 10,
-						shadowColor: "#BDBDBD",
-						shadowOffset: {
-							width: 0,
-							height: 1,
-						},
-						shadowRadius: 5,
-						shadowOpacity: 1.0,
-						// borderWidth: 1,
-						borderColor: theme.colors.lightGray,
-						borderRadius: 10,
+						flex: 1,
 					}}
 					data={this.state.conversation}
 					showsVerticalScrollIndicator={false}

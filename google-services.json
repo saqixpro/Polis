@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "984843719225",
+    "firebase_url": "https://social-app-5b38e.firebaseio.com",
+    "project_id": "social-app-5b38e",
+    "storage_bucket": "social-app-5b38e.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:984843719225:android:b2c3228fd2fb55bf87f3e8",
+        "android_client_info": {
+          "package_name": "com.polistech.polis"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "984843719225-5aor0vi6b7e3gddvdm30s5tghrga9i7l.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.polistech.polis",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "984843719225-fmisi5ft9jo5e35ghf5ffrjboohflig8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAkb77eoK45KvMjHHsnqAKiQjMbPdphV9k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "984843719225-fmisi5ft9jo5e35ghf5ffrjboohflig8.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "984843719225-elm14gs1cpqmtqra2h1fq85pfpjb02a9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.polistech.polis"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

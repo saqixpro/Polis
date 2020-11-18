@@ -1,9 +1,0 @@
-export const splash = require('./images/Splash.png');
-export const drawer = require('./images/drawer.png');
-export const back = require('./images/back.png');
-export const postImg = require('./images/postImg.jpg');
-export const user = require('./images/user.jpg');
-export const more = require('./images/more.png');
-export const sun = require('./images/sun.png');
-export const greenCircle = require('./images/green-circle.png');
-export const whiteCircle = require('./images/white-circle.png');

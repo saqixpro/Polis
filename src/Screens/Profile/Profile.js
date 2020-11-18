@@ -19,7 +19,6 @@ import styles from "./styles"
 import theme from "../../theme"
 import OptionsMenu from "react-native-options-menu"
 import Slider from "react-native-slider"
-import { more } from "../../aseets"
 import BottomTab from "../../components/bottomTab"
 import { connect } from "react-redux"
 import firebase from "firebase"
@@ -364,12 +363,13 @@ class Profile extends Component {
 										<Entypo name='chevron-left' size={18} color={"white"} />
 									</TouchableOpacity>
 									{this.props.user.avatar ? (
-										<ImageBackground
+										<Image
 											source={{ uri: this.state.user.avatar }}
 											style={{
 												height: 50,
 												width: 50,
-												borderRadius: 20,
+												borderRadius: 10,
+												marginLeft: 20,
 												justifyContent: "space-around",
 											}}
 										/>
@@ -420,7 +420,7 @@ class Profile extends Component {
 									</View>
 								</View>
 								<OptionsMenu
-									button={more}
+									button={require("../../aseets/images/more.png")}
 									buttonStyle={{
 										width: 30,
 										height: 20,
@@ -440,7 +440,7 @@ class Profile extends Component {
 									]}
 								/>
 							</View>
-							<Text style={[styles.largeText, { marginTop: 10 }]}>
+							<Text style={[styles.largeText, { marginTop: 40 }]}>
 								Settings
 							</Text>
 							<View style={{ top: 30 }}>
@@ -448,7 +448,9 @@ class Profile extends Component {
 									onPress={() => this.props.navigation.navigate("EditProfile")}
 									style={styles.mainView}
 								>
-									<Feather name='user' size={25} color='#555' />
+									<View style={styles.icon}>
+										<Feather name='user' size={28} color='#555' />
+									</View>
 									<Text style={styles.mainText}>Edit Profile</Text>
 								</TouchableOpacity>
 								<TouchableOpacity
@@ -457,28 +459,36 @@ class Profile extends Component {
 									}
 									style={styles.mainView}
 								>
-									<MaterialIcons name='lock-outline' size={25} color='#555' />
+									<View style={styles.icon}>
+										<FontAwesome name='lock' size={28} color='#555' />
+									</View>
 									<Text style={[styles.mainText, { marginLeft: 19 }]}>
 										Reset Password
 									</Text>
 								</TouchableOpacity>
 								<TouchableOpacity style={styles.mainView}>
-									<Ionicons
-										name='ios-document-text-sharp'
-										size={25}
-										color='grey'
-									/>
-									<Text style={styles.mainText}>Term & Condition</Text>
+									<View style={styles.icon}>
+										<FontAwesome5
+											name='clipboard-list'
+											size={28}
+											color='grey'
+										/>
+									</View>
+									<Text style={styles.mainText}>Terms & Conditions</Text>
 								</TouchableOpacity>
 								<TouchableOpacity style={styles.mainView}>
-									<MaterialIcons name='local-police' size={25} color='grey' />
+									<View style={styles.icon}>
+										<FontAwesome name='user-o' size={28} color='grey' />
+									</View>
 									<Text style={styles.mainText}>Privacy Policy</Text>
 								</TouchableOpacity>
 								<TouchableOpacity
 									onPress={this.signOut}
 									style={styles.mainView}
 								>
-									<Ionicons name='log-out-outline' size={25} color='grey' />
+									<View style={styles.icon}>
+										<FontAwesome name='sign-out' size={28} color='grey' />
+									</View>
 									<Text style={styles.mainText}>Logout</Text>
 								</TouchableOpacity>
 							</View>
@@ -743,31 +753,42 @@ class Profile extends Component {
 										this.props.user.following.includes(this.state.user.uid) ? (
 											<TouchableOpacity
 												onPress={this.unfollowUser}
-												style={{
-													...styles.actionBtn,
-													flexDirection: "row",
-													backgroundColor: "#4988fc",
-													justifyContent: "space-between",
-													alignSelf: "center",
-												}}
+												style={styles.cancl}
 											>
-												<FontAwesome color='#fff' name='check' size={20} />
-												<Text
+												{/* #0384fc */}
+												<View
 													style={{
-														marginHorizontal: 5,
-														fontWeight: "bold",
-														color: "#fff",
+														...styles.button,
+														backgroundColor: "#0384fc",
 													}}
 												>
-													Subscribed
-												</Text>
+													<FontAwesome
+														style={{ marginHorizontal: 3, color: "white" }}
+														name='check'
+														size={18}
+													/>
+													<Text style={{ marginHorizontal: 3, color: "white" }}>
+														Subscribed
+													</Text>
+												</View>
 											</TouchableOpacity>
 										) : (
 											<TouchableOpacity
 												onPress={this.followUser}
-												style={{ ...styles.actionBtn, alignSelf: "center" }}
+												style={{ ...styles.cancl }}
 											>
-												<Text>Subscribe</Text>
+												<View
+													style={{
+														...styles.button,
+													}}
+												>
+													<FontAwesome
+														style={{ marginHorizontal: 3 }}
+														name='user-o'
+														size={18}
+													/>
+													<Text style={{ marginHorizontal: 3 }}>Subscribe</Text>
+												</View>
 											</TouchableOpacity>
 										)
 									) : null}
@@ -788,34 +809,35 @@ class Profile extends Component {
 												onPress={this.unfollowUser}
 												style={styles.cancl}
 											>
-												<Image
-													source={require("../../aseets/images/Following_btn.png")}
+												<View
 													style={{
-														width: 150,
-														height: 50,
-														transform: [{ scale: 0.8 }],
+														...styles.button,
+														backgroundColor: "#0384fc",
 													}}
-													width={150}
-													height={50}
-													borderRadius={10}
-												/>
+												>
+													<FontAwesome
+														style={{ marginHorizontal: 3, color: "white" }}
+														name='check'
+														size={18}
+													/>
+													<Text style={{ marginHorizontal: 3, color: "white" }}>
+														Following
+													</Text>
+												</View>
 											</TouchableOpacity>
 										) : (
 											<TouchableOpacity
 												onPress={this.followUser}
 												style={styles.cancl}
 											>
-												<Image
-													source={require("../../aseets/images/Follow_btn.png")}
-													style={{
-														width: 150,
-														height: 50,
-														transform: [{ scale: 0.8 }],
-													}}
-													width={150}
-													height={50}
-													borderRadius={10}
-												/>
+												<View style={styles.button}>
+													<FontAwesome
+														style={{ marginHorizontal: 3 }}
+														name='user-o'
+														size={18}
+													/>
+													<Text style={{ marginHorizontal: 3 }}>Follow</Text>
+												</View>
 											</TouchableOpacity>
 										)
 									) : null}
@@ -828,17 +850,14 @@ class Profile extends Component {
 										}
 										style={[styles.cancl]}
 									>
-										<Image
-											source={require("../../aseets/images/message_btn.png")}
-											style={{
-												width: 150,
-												height: 50,
-												transform: [{ scale: 0.8 }],
-											}}
-											width={150}
-											height={50}
-											borderRadius={10}
-										/>
+										<View style={styles.button}>
+											<FontAwesome
+												style={{ marginHorizontal: 3 }}
+												name='envelope'
+												size={18}
+											/>
+											<Text style={{ marginHorizontal: 3 }}>Message</Text>
+										</View>
 									</TouchableOpacity>
 								</View>
 							)
@@ -908,7 +927,8 @@ class Profile extends Component {
 								<Text
 									style={{
 										color: "black",
-										fontWeight: "bold",
+										fontWeight: "600",
+										fontSize: 18,
 										// marginLeft: 5,
 										alignSelf: "center",
 									}}

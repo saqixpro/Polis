@@ -22,6 +22,10 @@ import * as ActionTypes from "../../redux/reducers/actionTypes"
 import PostMenu from "../../components/postMenu"
 import { PostSkeleton } from "../../components/skeletons"
 import { FontAwesome, Ionicons, FontAwesome5 } from "@expo/vector-icons"
+import * as Permissions from "expo-permissions"
+import Constants from "expo-constants"
+import * as Notifications from "expo-notifications"
+import firebase from "firebase"
 
 const { height, width } = Dimensions.get("screen")
 
@@ -100,6 +104,48 @@ class Home extends Component {
 		this.setState({ pod })
 	}
 
+	registerForPushNotificationsAsync = async () => {
+		if (Constants.isDevice) {
+			const { status: existingStatus } = await Permissions.getAsync(
+				Permissions.NOTIFICATIONS,
+			)
+			let finalStatus = existingStatus
+			if (existingStatus !== "granted") {
+				const { status } = await Permissions.askAsync(Permissions.NOTIFICATIONS)
+				finalStatus = status
+			}
+			if (finalStatus !== "granted") {
+				alert("Failed to get push token for push notification!")
+				return
+			}
+			const token = (await Notifications.getExpoPushTokenAsync()).data
+			console.log(token)
+
+			// Save Push TOken in Firebase
+			try {
+				const currentUser = firebase.auth().currentUser
+				const ref = firebase
+					.firestore()
+					.collection("users")
+					.doc(currentUser.uid)
+				await ref.set({ pushToken: token }, { merge: true })
+			} catch (err) {
+				console.log(err.message)
+			}
+		} else {
+			alert("Must use physical device for Push Notifications")
+		}
+
+		if (Platform.OS === "android") {
+			Notifications.setNotificationChannelAsync("default", {
+				name: "default",
+				importance: Notifications.AndroidImportance.MAX,
+				vibrationPattern: [0, 250, 250, 250],
+				lightColor: "#FF231F7C",
+			})
+		}
+	}
+
 	calculateRemainingTime = (timeStamp) => {
 		const now = Date.now()
 		const remainingTimeInMS = timeStamp - now
@@ -136,7 +182,6 @@ class Home extends Component {
 							style={{
 								height: 45,
 								alignSelf: "center",
-								backgroundColor: "blue",
 								width: 45,
 								borderRadius: 20,
 								justifyContent: "space-around",
@@ -382,7 +427,6 @@ class Home extends Component {
 							style={{
 								height: 45,
 								alignSelf: "center",
-								backgroundColor: "blue",
 								width: 45,
 								borderRadius: 20,
 								justifyContent: "space-around",
@@ -551,6 +595,7 @@ class Home extends Component {
 			<View
 				style={{
 					height: Dimensions.get("screen").height / 2.5,
+					paddingVertical: 20,
 				}}
 			>
 				<ImageBackground
@@ -648,6 +693,7 @@ class Home extends Component {
 									maxHeight: 80,
 									overflow: "hidden",
 									marginTop: 10,
+									marginBottom: 10,
 									fontSize: 19,
 									fontWeight: "600",
 								},
@@ -661,8 +707,11 @@ class Home extends Component {
 					showsHorizontalScrollIndicator={false}
 					horizontal
 					style={{
-						marginTop: "-20%",
-						marginBottom: 20,
+						position: "absolute",
+						bottom: 2,
+						left: 0,
+						right: 0,
+						paddingVertical: 10,
 					}}
 					data={this.state.cards}
 					extraData={this.state}
@@ -676,70 +725,74 @@ class Home extends Component {
 
 	renderCards = ({ item, index }) => {
 		return (
-			<TouchableOpacity
-				onPress={() =>
-					this.props.navigation.navigate("CommentScreen", { postID: item.id })
-				}
+			<View
 				style={{
-					backgroundColor: theme.colors.milky_white,
-					marginHorizontal: 8,
-					flex: 1,
-					alignSelf: "center",
-					justifyContent: "center",
-					maxWidth: 170,
-					minHeight: 110,
-					maxHeight: 110,
-					paddingHorizontal: 20,
-					paddingVertical: 15,
+					width: 150,
+					height: 90,
+					backgroundColor: "#fff",
 					shadowColor: "#ccc",
 					shadowOffset: {
-						width: 1.5,
-						height: 1.5,
+						width: 3,
+						height: 3,
 					},
 					shadowOpacity: 0.8,
-					shadowRadius: 5,
+					marginHorizontal: 6,
 					borderRadius: 20,
 				}}
 			>
-				<Text
+				<TouchableOpacity
+					onPress={() =>
+						this.props.navigation.navigate("CommentScreen", { postID: item.id })
+					}
 					style={{
-						textAlign: "left",
-						width: "80%",
-						fontSize: 12,
-						fontWeight: "400",
+						width: "100%",
+						height: "100%",
+						justifyContent: "center",
 						overflow: "hidden",
-					}}
-				>
-					{item.textContent}
-				</Text>
-				<View
-					style={{
-						flexDirection: "row",
-						justifyContent: "flex-end",
-						marginRight: 5,
+						paddingHorizontal: 20,
+						paddingVertical: 15,
 					}}
 				>
 					<Text
 						style={{
-							marginRight: 5,
-							fontSize: 10,
-							fontWeight: "bold",
-							padding: 3,
+							textAlign: "left",
+							width: "80%",
+							fontSize: 12,
+							fontWeight: "400",
+							overflow: "hidden",
 						}}
 					>
-						{item.comments.length}
+						{item.textContent}
 					</Text>
-					<TouchableOpacity
-						onPress={() =>
-							this.props.navigation.navigate("CommentScreen", {
-								postID: item.id,
-							})
-						}
+					<View
+						style={{
+							flexDirection: "row",
+							justifyContent: "flex-end",
+							marginRight: 5,
+						}}
 					>
-						<FontAwesome5 name='comment-alt' size={16} color='gray' />
-					</TouchableOpacity>
-				</View>
-			</TouchableOpacity>
+						<Text
+							style={{
+								marginRight: 5,
+								fontSize: 10,
+								fontWeight: "bold",
+								padding: 3,
+							}}
+						>
+							{item.comments.length}
+						</Text>
+						<TouchableOpacity
+							onPress={() =>
+								this.props.navigation.navigate("CommentScreen", {
+									postID: item.id,
+								})
+							}
+						>
+							<FontAwesome5 name='comment-alt' size={16} color='gray' />
+						</TouchableOpacity>
+					</View>
+				</TouchableOpacity>
+			</View>
 		)
 	}
 
@@ -788,9 +841,10 @@ class Home extends Component {
 	}
 
 	componentDidMount = async () => {
-		await this.fetchPostsForCurrentUser()
-		await this.fetchTrendingPostsAsync()
 		await this.fetchPOD()
+		await this.fetchTrendingPostsAsync()
+		await this.fetchPostsForCurrentUser()
+		this.registerForPushNotificationsAsync()
 	}
 
 	animateBottomTabs = (val) =>
@@ -818,124 +872,57 @@ class Home extends Component {
 		return (
 			<View style={styles.mainContainer}>
 				<StatusBar barStyle='light-content' />
-				{this.state.posts.length > 0 ? (
-					<View>
-						{this.state.posts[0].msg ? (
-							<FlatList
-								style={{
-									height: "100%",
-									width: width,
-									zIndex: 10000,
-								}}
-								ListHeaderComponent={this.renderTopHeader}
-								ListFooterComponent={() => <View />}
-								stickyHeaderIndices={[1]}
-								ListFooterComponentStyle={{ height: 200, width: "100%" }}
-								onScrollBeginDrag={(e) => {
-									this.animateBottomTabs(1)
-								}}
-								onScroll={(e) => {
-									if (
-										e.nativeEvent.contentOffset.y >= 290 &&
-										e.nativeEvent.contentOffset.y <= 310
-									) {
-										this.setState({ thresholdReached: true })
-									} else if (e.nativeEvent.contentOffset.y <= 0) {
-										this.setState({ thresholdReached: false })
+				<View>
+					<FlatList
+						style={{ height: "100%", width: width, zIndex: 10000 }}
+						ListHeaderComponent={this.renderTopHeader}
+						ListFooterComponent={() => <View />}
+						stickyHeaderIndices={[1]}
+						ListFooterComponentStyle={{ height: 200, width: "100%" }}
+						onScrollBeginDrag={(e) => {
+							this.animateBottomTabs(1)
+						}}
+						onScroll={(e) => {
+							if (
+								e.nativeEvent.contentOffset.y >= 290 &&
+								e.nativeEvent.contentOffset.y <= 310
+							) {
+								this.setState({ thresholdReached: true })
+							} else if (e.nativeEvent.contentOffset.y <= 0) {
+								this.setState({ thresholdReached: false })
+							}
+						}}
+						maxToRenderPerBatch={5}
+						onScrollEndDrag={() => this.animateBottomTabs(0)}
+						data={[{ tx: "menuBar" }, ...this.state.posts]}
+						scrollEventThrottle={16}
+						alwaysBounceVertical={false}
+						keyExtractor={(item, index) => item + index.toString()}
+						extraData={[{ tx: "menuBar" }, ...this.props.posts]}
+						refreshing={this.state.refreshing}
+						onRefresh={this.refreshPosts}
+						renderItem={({ item, index }) =>
+							item.tx == "menuBar" ? (
+								<PostMenu
+									newsPosts={() => this.filterPosts("news")}
+									allPosts={() => this.filterPosts("all")}
+									verifiedPosts={() => this.filterPosts("verified")}
+									followingPosts={() => this.filterPosts("following")}
+									style={
+										this.state.thresholdReached
+											? { paddingTop: 80, paddingBottom: 50 }
+											: null
 									}
-								}}
-								maxToRenderPerBatch={5}
-								onScrollEndDrag={() => this.animateBottomTabs(0)}
-								data={[{ tx: "menuBar" }, ...this.state.posts]}
-								scrollEventThrottle={16}
-								alwaysBounceVertical={false}
-								keyExtractor={(item, index) => item + index.toString()}
-								extraData={[{ tx: "menuBar" }, ...this.props.posts]}
-								refreshing={this.state.refreshing}
-								onRefresh={this.refreshPosts}
-								renderItem={({ item, index }) =>
-									item.tx == "menuBar" ? (
-										<PostMenu
-											newsPosts={() => this.filterPosts("news")}
-											allPosts={() => this.filterPosts("all")}
-											verifiedPosts={() => this.filterPosts("verified")}
-											followingPosts={() => this.filterPosts("following")}
-											style={
-												this.state.thresholdReached
-													? { paddingTop: 80, paddingBottom: 50 }
-													: null
-											}
-										/>
-									) : (
-										<View
-											style={{
-												width: "100%",
-												height: "90%",
-												justifyContent: "center",
-												alignItems: "center",
-											}}
-										>
-											<Text>NOTHING TO DISPLAY</Text>
-										</View>
-									)
-								}
-								showsVerticalScrollIndicator={false}
-							/>
-						) : (
-							<FlatList
-								style={{ height: "100%", width: width, zIndex: 10000 }}
-								ListHeaderComponent={this.renderTopHeader}
-								ListFooterComponent={() => <View />}
-								stickyHeaderIndices={[1]}
-								ListFooterComponentStyle={{ height: 200, width: "100%" }}
-								onScrollBeginDrag={(e) => {
-									this.animateBottomTabs(1)
-								}}
-								onScroll={(e) => {
-									if (
-										e.nativeEvent.contentOffset.y >= 290 &&
-										e.nativeEvent.contentOffset.y <= 310
-									) {
-										this.setState({ thresholdReached: true })
-									} else if (e.nativeEvent.contentOffset.y <= 0) {
-										this.setState({ thresholdReached: false })
-									}
-								}}
-								maxToRenderPerBatch={5}
-								onScrollEndDrag={() => this.animateBottomTabs(0)}
-								data={[{ tx: "menuBar" }, ...this.state.posts]}
-								scrollEventThrottle={16}
-								alwaysBounceVertical={false}
-								keyExtractor={(item, index) => item + index.toString()}
-								extraData={[{ tx: "menuBar" }, ...this.props.posts]}
-								refreshing={this.state.refreshing}
-								onRefresh={this.refreshPosts}
-								renderItem={({ item, index }) =>
-									item.tx == "menuBar" ? (
-										<PostMenu
-											newsPosts={() => this.filterPosts("news")}
-											allPosts={() => this.filterPosts("all")}
-											verifiedPosts={() => this.filterPosts("verified")}
-											followingPosts={() => this.filterPosts("following")}
-											style={
-												this.state.thresholdReached
-													? { paddingTop: 80, paddingBottom: 50 }
-													: null
-											}
-										/>
-									) : item.poll ? (
-										this.renderPolls(item, index)
-									) : (
-										this.renderPosts(item, index)
-									)
-								}
-								showsVerticalScrollIndicator={false}
-							/>
-						)}
-					</View>
-				) : (
-					<PostSkeleton />
-				)}
+								/>
+							) : item.poll ? (
+								this.renderPolls(item, index)
+							) : (
+								this.renderPosts(item, index)
+							)
+						}
+						showsVerticalScrollIndicator={false}
+					/>
+				</View>
 				<View
 					style={{
 						width: "100%",

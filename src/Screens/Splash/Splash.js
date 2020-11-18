@@ -1,7 +1,6 @@
 import React, { Component } from "react"
-import { View, StatusBar, ImageBackground, Alert } from "react-native"
+import { View, StatusBar, Alert, Text, Image } from "react-native"
 import firebase from "firebase"
-import { splash } from "../../aseets"
 import styles from "./styles"
 import { connect } from "react-redux"
 import { Loader } from "../../utils/Loading"
@@ -37,11 +36,19 @@ class Splash extends Component {
 			<View style={styles.mainContainer}>
 				<StatusBar hidden={true} />
 				<Loader visible={true} />
-				<ImageBackground
-					source={splash}
-					style={styles.splashStyle}
-					resizeMode={"cover"}
-				/>
+				<View style={{ flex: 0.6, justifyContent: "center" }}>
+					<Image
+						source={require("../../../assets/favicon.png")}
+						width={150}
+						height={150}
+						style={{ width: 150, height: 150, borderRadius: 10 }}
+					/>
+					<Text
+						style={{ fontSize: 35, fontWeight: "600", textAlign: "center" }}
+					>
+						POLIS
+					</Text>
+				</View>
 			</View>
 		)
 	}
