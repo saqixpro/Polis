@@ -2,8 +2,6 @@ import React, { Component } from "react"
 import {
 	View,
 	Text,
-	FlatList,
-	TouchableOpacity,
 	ImageBackground,
 	Image,
 	Dimensions,
@@ -12,6 +10,7 @@ import {
 	Animated,
 	Share,
 	Linking,
+	Alert,
 } from "react-native"
 import styles from "./styles"
 import theme from "../../theme"
@@ -24,8 +23,10 @@ import { PostSkeleton } from "../../components/skeletons"
 import { FontAwesome, Ionicons, FontAwesome5 } from "@expo/vector-icons"
 import * as Permissions from "expo-permissions"
 import Constants from "expo-constants"
-import * as Notifications from "expo-notifications"
 import firebase from "firebase"
+import * as Notifications from "../../functions/notifications"
+
+import { FlatList, TouchableOpacity } from "react-native-gesture-handler"
 
 const { height, width } = Dimensions.get("screen")
 
@@ -63,7 +64,7 @@ class Home extends Component {
 	}
 
 	liked = (_id) => {
-		const { posts } = this.props
+		const { posts } = this.state
 		const post = posts.find((_post) => _post.id == _id)
 		let alreadyLiked = false
 		if (post) {
@@ -79,12 +80,61 @@ class Home extends Component {
 
 	likePost = async (id) => {
 		await Functions.likePost(id, this.props.user.uid)
-		this.props.likePost(id, this.props.user.uid)
+
+		const _post = this.state.posts.find((post) => post.id == id)
+		const _updatedPost = {
+			..._post,
+			likes: _post.likes
+				? [..._post.likes, this.props.user.uid]
+				: [this.props.user.uid],
+		}
+		const updatedPosts = this.state.posts.map((post) =>
+			post.id == id ? _updatedPost : post,
+		)
+
+		this.setState({ posts: updatedPosts })
+
+		try {
+			const { user } = await Functions.fetchUserById(_post.author.id)
+
+			Notifications.sendExpoNotification(
+				user ? user.expoToken : "test",
+				`Polis`,
+				`${this.props.user.name} liked your Post`,
+			)
+
+			firebase
+				.firestore()
+				.collection("Notifications")
+				.add({
+					user: user.id,
+					postID: id,
+					type: "like",
+					textContent: `${this.props.user.name} liked your POST`,
+					timeStamp: Date.now(),
+				})
+		} catch (error) {
+			Alert.alert(error.message)
+		}
+
+		this.props.cachePosts(updatedPosts)
 	}
 
 	unlikePost = async (id) => {
 		await Functions.unlikePost(id, this.props.user.uid)
-		this.props.unlikePost(id, this.props.user.uid)
+
+		const __post = this.state.posts.find((post) => post.id == id)
+		const __updatedPost = {
+			...__post,
+			likes: __post.likes.filter((id) => id !== this.props.user.uid),
+		}
+		const _updatedPosts = this.state.posts.map((post) =>
+			post.id == id ? __updatedPost : post,
+		)
+
+		this.setState({ posts: _updatedPosts })
+
+		this.props.cachePosts(updatedPosts)
 	}
 
 	refreshPosts = async () => {
@@ -363,7 +413,7 @@ class Home extends Component {
 						<View style={[styles.bottomContainer]}>
 							<FontAwesome5 name='comment-alt' size={18} color='gray' />
 							<Text style={{ marginHorizontal: 3, fontSize: 12, padding: 3 }}>
-								{item.comments.length}
+								{item.comments ? item.comments.length : 0}
 							</Text>
 						</View>
 					</TouchableOpacity>
@@ -388,11 +438,28 @@ class Home extends Component {
 
 	castVote = async (postID, optionId) => {
 		await Functions.castVote(this.props.user.uid, postID, optionId)
-		this.props.castVote(postID, optionId, this.props.user.uid)
+		const poll_post = this.state.posts.find((post) => post.id == postID)
+		const updated_poll = poll_post.poll.map((option) =>
+			option.id == optionId
+				? { ...option, votes: [...option.votes, this.props.user.uid] }
+				: option,
+		)
+		const updated_poll_post = {
+			...poll_post,
+			poll: updated_poll,
+			votes: poll_post.votes + 1,
+		}
+		const updated_posts = this.state.posts.map((post) =>
+			post.id == postID ? updated_poll_post : post,
+		)
+
+		this.setState({ posts: updated_posts })
+
+		this.props.cachePosts(updatedPosts)
 	}
 
 	voteAlreadyCasted = (postID) => {
-		const currentPost = this.props.posts.find((post) => post.id == postID)
+		const currentPost = this.state.posts.find((post) => post.id == postID)
 		const poll = currentPost ? currentPost.poll : null
 		try {
 			if (poll) {
@@ -498,7 +565,7 @@ class Home extends Component {
 							style={[
 								{
 									fontSize: 12,
-									color: "#8F92A1",
+									color: theme.colors.gray,
 									fontWeight: "300",
 								},
 							]}
@@ -544,7 +611,7 @@ class Home extends Component {
 						<View style={[styles.bottomContainer]}>
 							<FontAwesome5 name='comment-alt' size={18} color='gray' />
 							<Text style={{ marginHorizontal: 3, fontSize: 12, padding: 3 }}>
-								{item.comments.length}
+								{item.comments ? item.comments.length : 0}{" "}
 							</Text>
 						</View>
 					</TouchableOpacity>
@@ -594,7 +661,7 @@ class Home extends Component {
 		<View>
 			<View
 				style={{
-					height: Dimensions.get("screen").height / 2.5,
+					height: Dimensions.get("screen").height / 2.3,
 					paddingVertical: 20,
 				}}
 			>
@@ -708,10 +775,10 @@ class Home extends Component {
 					horizontal
 					style={{
 						position: "absolute",
-						bottom: 2,
+						bottom: 20,
 						left: 0,
 						right: 0,
-						paddingVertical: 10,
+						paddingVertical: 20,
 					}}
 					data={this.state.cards}
 					extraData={this.state}
@@ -779,7 +846,7 @@ class Home extends Component {
 								padding: 3,
 							}}
 						>
-							{item.comments.length}
+							{item.comments ? item.comments.length : 0}{" "}
 						</Text>
 						<TouchableOpacity
 							onPress={() =>
@@ -827,17 +894,21 @@ class Home extends Component {
 	}
 
 	fetchPostsForCurrentUser = async () => {
-		const { posts } = await Functions.fetchPosts()
-		this.setState({
-			posts: posts.sort((a, b) => {
-				return a.timeStamp < b.timeStamp
-					? 1
-					: a.timeStamp > b.timeStamp
-					? -1
-					: 0
-			}),
-		})
-		this.props.cachePosts(posts)
+		try {
+			const { posts } = await Functions.fetchPosts()
+			this.setState({
+				posts: posts.sort((a, b) => {
+					return a.timeStamp < b.timeStamp
+						? 1
+						: a.timeStamp > b.timeStamp
+						? -1
+						: 0
+				}),
+			})
+			this.props.cachePosts(posts)
+		} catch (error) {
+			alert(error.message)
+		}
 	}
 
 	componentDidMount = async () => {
@@ -954,31 +1025,31 @@ const mapDispatchToProps = (dispatch) => ({
 				posts,
 			},
 		}),
-	likePost: (id, userID) =>
-		dispatch({
-			type: ActionTypes.LIKE_POST,
-			payload: {
-				id,
-				userID,
-			},
-		}),
-	unlikePost: (id, userID) =>
-		dispatch({
-			type: ActionTypes.UNLIKE_POST,
-			payload: {
-				id,
-				userID,
-			},
-		}),
-	castVote: (postID, optionID, userID) =>
-		dispatch({
-			type: ActionTypes.CAST_VOTE,
-			payload: {
-				postID,
-				optionID,
-				userID,
-			},
-		}),
+	// likePost: (id, userID) =>
+	// 	dispatch({
+	// 		type: ActionTypes.LIKE_POST,
+	// 		payload: {
+	// 			id,
+	// 			userID,
+	// 		},
+	// 	}),
+	// unlikePost: (id, userID) =>
+	// 	dispatch({
+	// 		type: ActionTypes.UNLIKE_POST,
+	// 		payload: {
+	// 			id,
+	// 			userID,
+	// 		},
+	// 	}),
+	// castVote: (postID, optionID, userID) =>
+	// 	dispatch({
+	// 		type: ActionTypes.CAST_VOTE,
+	// 		payload: {
+	// 			postID,
+	// 			optionID,
+	// 			userID,
+	// 		},
+	// 	}),
 })
 const connectComponent = connect(mapStateToProps, mapDispatchToProps)
 export default connectComponent(Home)

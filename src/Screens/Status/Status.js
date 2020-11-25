@@ -1,9 +1,7 @@
 import React, { Component } from "react"
 import {
 	View,
-	TouchableOpacity,
 	Image,
-	TextInput,
 	Animated,
 	Easing,
 	KeyboardAvoidingView,
@@ -18,9 +16,10 @@ import { Button, Text } from "native-base"
 import Functions from "../../functions/functions"
 import { Loader } from "../../utils/Loading"
 import * as ActionTypes from "../../redux/reducers/actionTypes"
-import ImagePicker from "expo-image-picker"
+import * as ImagePicker from "expo-image-picker"
 import * as ImageManipulator from "expo-image-manipulator"
 import firebase from "firebase"
+import { TextInput, TouchableOpacity } from "react-native-gesture-handler"
 
 class Status extends Component {
 	constructor(props) {
@@ -91,30 +90,27 @@ class Status extends Component {
 
 	handleChoosePhoto = async () => {
 		try {
-			ImagePicker.launchImageLibrary(
-				{
-					mediaType: "mixed",
-					allowsEditing: true,
-					quality: 1,
-				},
-				async (result) => {
-					const manipResult = await ImageManipulator.manipulateAsync(
-						result.uri,
-						[{ resize: { width: 160, height: 160 } }],
-						{
-							compress: 0.9,
-							format: ImageManipulator.SaveFormat.PNG,
-							base64: false,
-						},
-					).catch((err) => {
-						this.setState({ loading: false })
-					})
+			const result = await ImagePicker.launchImageLibraryAsync({
+				mediaTypes: ImagePicker.MediaTypeOptions.Images,
+				allowsEditing: true,
+				aspect: [4, 3],
+				quality: 1,
+			})
 
-					if (manipResult) {
-						this.setState({ imgResult: manipResult })
-					}
+			const manipResult = await ImageManipulator.manipulateAsync(
+				result.uri,
+				[{ resize: { width: 160, height: 160 } }],
+				{
+					compress: 0.9,
+					format: ImageManipulator.SaveFormat.PNG,
+					base64: false,
 				},
-			)
+			).catch((err) => {
+				this.setState({ loading: false })
+			})
+			if (manipResult) {
+				this.setState({ imgResult: manipResult })
+			}
 		} catch (err) {
 			alert(err.message)
 		}
@@ -185,6 +181,8 @@ class Status extends Component {
 							flexDirection: "row",
 							justifyContent: "space-between",
 							marginTop: "5%",
+							width: "90%",
+							alignSelf: "center",
 						}}
 					>
 						<TouchableOpacity

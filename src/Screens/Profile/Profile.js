@@ -2,11 +2,7 @@ import React, { Component } from "react"
 import {
 	View,
 	Text,
-	ImageBackground,
-	FlatList,
-	TouchableOpacity,
 	Image,
-	ScrollView,
 	SafeAreaView,
 	Animated,
 	Easing,
@@ -15,7 +11,11 @@ import {
 	Linking,
 } from "react-native"
 import styles from "./styles"
-
+import {
+	FlatList,
+	TouchableOpacity,
+	ScrollView,
+} from "react-native-gesture-handler"
 import theme from "../../theme"
 import OptionsMenu from "react-native-options-menu"
 import Slider from "react-native-slider"
@@ -271,11 +271,11 @@ class Profile extends Component {
 					<View style={[styles.bottomContainer]}>
 						{this.liked(item.id) ? (
 							<TouchableOpacity onPress={() => this.unlikePost(item.id)}>
-								<Ionicons name='ios-heart' size={20} color='red' />
+								<FontAwesome name='heart' size={20} color='red' />
 							</TouchableOpacity>
 						) : (
 							<TouchableOpacity onPress={() => this.likePost(item.id)}>
-								<Ionicons name='ios-heart-outline' size={20} color='grey' />
+								<FontAwesome name='heart-o' size={20} color='grey' />
 							</TouchableOpacity>
 						)}
 						<Text style={{ marginHorizontal: 3, fontSize: 12, padding: 3 }}>
@@ -878,7 +878,7 @@ class Profile extends Component {
 										margin: 15,
 										padding: 10,
 										borderRadius: 20,
-										width: "35%",
+										width: "90%",
 										alignSelf: "center",
 									}}
 								>
@@ -898,7 +898,7 @@ class Profile extends Component {
 										margin: 15,
 										padding: 10,
 										borderRadius: 20,
-										width: "45%",
+										width: "95%",
 										alignSelf: "center",
 									}}
 								>
@@ -920,7 +920,7 @@ class Profile extends Component {
 									margin: 15,
 									padding: 10,
 									borderRadius: 20,
-									width: "45%",
+									width: "90%",
 									alignSelf: "center",
 								}}
 							>

@@ -81,9 +81,19 @@ export default class Functions {
 						.collection("users")
 						.doc(_posts[i].author)
 						.get()
+
+					let comments = await firebase
+						.firestore()
+						.collection("comments")
+						.where("postID", "==", _posts[i].id)
+						.get()
+
+					comments = comments.docs.map((cmt) => ({ id: cmt.id, ...cmt.data() }))
+
 					_posts[i] = {
 						..._posts[i],
 						author: { id: _posts[i].author, ...author.data() },
+						comments,
 					}
 				}
 
@@ -289,17 +299,16 @@ export default class Functions {
 		})
 	}
 
-	static makeComment(data, postID) {
+	static makeComment(data) {
 		return new Promise(async (resolve) => {
 			try {
-				const post = await firebase
+				firebase
 					.firestore()
-					.collection("posts")
-					.doc(postID)
-					.get()
-				let comments = post.data().comments
-				post.ref.set({ comments: [...comments, data] }, { merge: true })
-				resolve(true)
+					.collection("comments")
+					.add(data)
+					.then(() => {
+						resolve(true)
+					})
 			} catch (error) {
 				console.log(error)
 			}

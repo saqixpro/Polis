@@ -1,14 +1,5 @@
-import React, { Component } from "react"
-import {
-	View,
-	Text,
-	SafeAreaView,
-	TouchableOpacity,
-	FlatList,
-	Image,
-	Animated,
-	Easing,
-} from "react-native"
+import React, { Component, useState, useEffect } from "react"
+import { View, Text, SafeAreaView, Image, Animated, Easing } from "react-native"
 import { SearchBar } from "react-native-elements"
 import styles from "./styles"
 import theme from "../../theme"
@@ -17,24 +8,98 @@ import firebase from "firebase"
 import { connect } from "react-redux"
 import Functions from "../../functions/functions"
 import { FontAwesome } from "@expo/vector-icons"
+import { TouchableOpacity, FlatList } from "react-native-gesture-handler"
+
+const RenderChat = ({ item, index, navigation }) => {
+	return (
+		<TouchableOpacity
+			onPress={() =>
+				navigation.navigate("ChatDetail", {
+					receiverID: item.id,
+				})
+			}
+			key={index}
+			style={{
+				margin: 10,
+				flexDirection: "row",
+				alignItems: "center",
+				backgroundColor: "white",
+				marginVertical: 5,
+				padding: 5,
+			}}
+		>
+			{item.avatar ? (
+				<Image source={{ uri: item.avatar }} style={styles.userImgStyle} />
+			) : (
+				<View
+					style={{
+						height: 50,
+						backgroundColor: "#fff",
+						width: 50,
+						borderRadius: 20,
+						justifyContent: "space-around",
+						alignItems: "center",
+						alignSelf: "center",
+						shadowColor: "#aaa",
+						shadowOffset: {
+							width: 3,
+							height: 3,
+						},
+						shadowOpacity: 0.9,
+						shadowRadius: 3.5,
+						marginRight: 10,
+					}}
+				>
+					<Text style={{ fontSize: 26, fontWeight: "bold" }}>
+						{item.name ? item.name.charAt(0).toUpperCase() : "S"}
+					</Text>
+				</View>
+			)}
+			<View style={{}}>
+				<Text
+					style={{
+						fontSize: 16,
+						//  fontFamily: Fonts.FontAwesome
+					}}
+				>
+					{item.name && item.name}
+				</Text>
+				<View>
+					<Text
+						numberOfLines={1}
+						ellipsizeMode='tail'
+						style={{
+							fontSize: 14,
+							color: "grey",
+							textAlign: "left",
+							width: "95%",
+							// fontFamily: Fonts.FontAwesome,
+						}}
+					>
+						{item.text}
+					</Text>
+				</View>
+			</View>
+		</TouchableOpacity>
+	)
+}
 
 class Messages extends Component {
-	constructor(props) {
-		super(props)
-		this.state = {
-			search: "",
-			alignment: new Animated.Value(0),
-			messages: [],
-			allMessages: [],
-			filteredData: [],
-		}
+	state = {
+		search: "",
+		alignment: new Animated.Value(0),
+		messages: [],
+		allMessages: [],
+		filteredData: [],
 	}
-	updateSearch = (search) => {
-		if (search !== "") {
-			const searchData = this.state.allMessages.filter((item) =>
-				item.name.toLowerCase().includes(search.toLowerCase()),
+
+	updateSearch = (src) => {
+		if (src !== "") {
+			const data = this.state.allMessages.filter((item) =>
+				item.name.toLowerCase().includes(src.toLowerCase()),
 			)
-			this.setState({ messages: searchData, search: search })
+
+			this.setState({ messages: data, search: src })
 		} else {
 			this.setState({ messages: this.state.allMessages })
 		}
@@ -43,109 +108,37 @@ class Messages extends Component {
 	fetchUserConversations = async () => {
 		firebase
 			.database()
-			.ref("chats/")
+			.ref("chats")
 			.on("value", (snapshot) => {
-				snapshot.forEach(async (conversation) => {
-					const keys = conversation.key.split("_")
-					const senderID = keys[0] == this.props.user.uid ? keys[1] : keys[0]
-					const { user } = await Functions.fetchUserById(senderID)
-					this.setState(
-						{
-							allMessages: [...this.state.allMessages, user],
-						},
-						() => this.setState({ messages: this.state.allMessages }),
-					)
+				snapshot.forEach((conversation) => {
+					if (conversation.key.includes(this.props.user.uid)) {
+						const keys = conversation.key.split("_")
+						const senderID = keys[0] == this.props.user.uid ? keys[1] : keys[0]
+						firebase
+							.firestore()
+							.collection("users")
+							.doc(senderID)
+							.get()
+							.then((user) => {
+								const _user = { id: user.id, ...user.data() }
+								this.setState(
+									{
+										allMessages: [
+											...new Set([...this.state.allMessages, _user]),
+										],
+									},
+									() => {
+										this.setState({ messages: this.state.allMessages })
+									},
+								)
+							})
+					}
 				})
 			})
 	}
 
-	componentDidMount = async () => {
+	componentDidMount() {
 		this.fetchUserConversations()
-		// try {
-		//   const params = new FormData();
-		//   params.append('u_id', this.props.uid);
-		//   await this.props.allmessages(params);
-		//   if (this.props.isSuccess) {
-		//     this.setState({messages: this.props.messages});
-		//   } else {
-		//     //alert(this.props.errMsg);
-		//   }
-		// } catch (err) {
-		//   console.log(err.message);
-		// }
-	}
-	rendermembers = ({ item, index }) => {
-		return (
-			<TouchableOpacity
-				onPress={() =>
-					this.props.navigation.navigate("ChatDetail", {
-						receiverID: item.id,
-					})
-				}
-				key={index}
-				style={{
-					margin: 10,
-					flexDirection: "row",
-					alignItems: "center",
-					backgroundColor: "white",
-					marginVertical: 10,
-					padding: 8,
-				}}
-			>
-				{item.avatar ? (
-					<Image source={{ uri: item.avatar }} style={styles.userImgStyle} />
-				) : (
-					<View
-						style={{
-							height: 50,
-							backgroundColor: "#fff",
-							width: 50,
-							borderRadius: 20,
-							justifyContent: "space-around",
-							alignItems: "center",
-							alignSelf: "center",
-							shadowColor: "#aaa",
-							shadowOffset: {
-								width: 3,
-								height: 3,
-							},
-							shadowOpacity: 0.9,
-							shadowRadius: 3.5,
-							marginRight: 10,
-						}}
-					>
-						<Text style={{ fontSize: 26, fontWeight: "bold" }}>
-							{item.name ? item.name.charAt(0).toUpperCase() : "S"}
-						</Text>
-					</View>
-				)}
-				<View style={{}}>
-					<Text
-						style={{
-							fontSize: 16,
-							//  fontFamily: Fonts.FontAwesome
-						}}
-					>
-						{item.name && item.name}
-					</Text>
-					<View>
-						<Text
-							numberOfLines={1}
-							ellipsizeMode='tail'
-							style={{
-								fontSize: 14,
-								color: "grey",
-								textAlign: "left",
-								width: "95%",
-								// fontFamily: Fonts.FontAwesome,
-							}}
-						>
-							{item.text}
-						</Text>
-					</View>
-				</View>
-			</TouchableOpacity>
-		)
 	}
 
 	animateBottomTabs = (val) =>
@@ -169,6 +162,7 @@ class Messages extends Component {
 				},
 			],
 		}
+
 		return (
 			<View style={{ flex: 1, backgroundColor: "white" }}>
 				<SafeAreaView />
@@ -176,24 +170,26 @@ class Messages extends Component {
 					placeholder='Search'
 					lightTheme
 					placeholderTextColor={theme.colors.primary}
-					onClear={() => this.setState({ messages: this.state.allMessages })}
+					onClear={() => this.setState({ messages: allMessages })}
 					value={this.state.search}
 					searchIcon={<FontAwesome name='search' color='#aaa' size={20} />}
 					containerStyle={styles.searchContainer}
 					inputContainerStyle={styles.inputStyle}
 					onChangeText={(search) => {
-						this.updateSearch(search)
+						this.setState({ search })
 					}}
 				/>
 				<FlatList
 					data={this.state.messages}
 					onScrollEndDrag={() => this.animateBottomTabs(0)}
 					onScrollBeginDrag={() => this.animateBottomTabs(1)}
+					extraData={this.state}
 					ItemSeparatorComponent={() => (
 						<View style={{ borderBottomColor: "#ddd", borderBottomWidth: 1 }} />
 					)}
-					extraData={this.state}
-					renderItem={this.rendermembers}
+					renderItem={({ item }) => (
+						<RenderChat item={item} navigation={this.props.navigation} />
+					)}
 					keyExtractor={(item, index) => {
 						item + index.toString()
 					}}

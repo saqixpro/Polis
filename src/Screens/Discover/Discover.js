@@ -1,14 +1,5 @@
 import React, { Component } from "react"
-import {
-	View,
-	Text,
-	SafeAreaView,
-	TouchableOpacity,
-	FlatList,
-	Image,
-	Animated,
-	Easing,
-} from "react-native"
+import { View, Text, SafeAreaView, Image, Animated, Easing } from "react-native"
 import styles from "./styles"
 import BottomTab from "../../components/bottomTab"
 import { connect } from "react-redux"
@@ -17,6 +8,8 @@ import { Container, Header, Item, Icon, Input, Button } from "native-base"
 import { DiscoverSkeleton } from "../../components/skeletons"
 import Functions from "../../functions/functions"
 import FontAwesome from "react-native-vector-icons/FontAwesome"
+
+import { TouchableOpacity, FlatList } from "react-native-gesture-handler"
 
 class Discover extends Component {
 	constructor(props) {

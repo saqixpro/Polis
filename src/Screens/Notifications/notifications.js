@@ -1,12 +1,47 @@
-import React, { useState } from "react"
-import { View, Text, Animated, Easing, Image, SafeAreaView } from "react-native"
+import React, { useState, useEffect } from "react"
+import {
+	View,
+	Text,
+	Animated,
+	Easing,
+	Image,
+	SafeAreaView,
+	Alert,
+} from "react-native"
 import styles from "./styles"
 import BottomTab from "../../components/bottomTab"
 import { FlatList, TouchableOpacity } from "react-native-gesture-handler"
 import Swipable from "react-native-gesture-handler/Swipeable"
 import { FontAwesome5 } from "@expo/vector-icons"
+import firebase from "firebase"
+import { connect } from "react-redux"
 
-const RenderCards = ({ id, type, user, avatar, time, content, ondelete }) => {
+const formatTime = (timeStamp) => {
+	const timeInSeconds =
+		(new Date().getTime() - new Date(timeStamp).getTime()) / 1000
+	if (timeInSeconds < 60) return `${timeInSeconds.toFixed(0)} s`
+	const timeInMinutes = timeInSeconds / 60
+	if (timeInMinutes < 60) return `${timeInMinutes.toFixed(0)} m`
+	const timeInHours = timeInMinutes / 60
+	if (timeInHours < 24) return `${timeInHours.toFixed(0)} h`
+	const timeInDays = timeInHours / 24
+	if (timeInDays < 30) return `${timeInDays.toFixed(0)} d`
+	const timeInMonths = timeInDays / 30
+	if (timeInMonths < 12) return `${timeInMonths.toFixed(0)} months`
+	return `${(timeInMonths / 12).toFixed(0)} y`
+}
+
+const RenderCards = ({
+	id,
+	type,
+	postID,
+	navigation,
+	time,
+	textContent,
+	senderID,
+	receiverID,
+	ondelete,
+}) => {
 	const leftSwipe = (progress, dragX) => {
 		const scale = dragX.interpolate({
 			inputRange: [0, 100],
@@ -17,6 +52,7 @@ const RenderCards = ({ id, type, user, avatar, time, content, ondelete }) => {
 			<View
 				style={{
 					width: 100,
+					marginVertical: 10,
 					backgroundColor: "red",
 					justifyContent: "center",
 					alignItems: "center",
@@ -35,13 +71,20 @@ const RenderCards = ({ id, type, user, avatar, time, content, ondelete }) => {
 		)
 	}
 
+	const handleNavigation = () => {
+		if (type == "comment" || type == "like") {
+			navigation.navigate("CommentScreen", { postID })
+		} else if (type == "message") {
+			navigation.navigate("ChatDetail", {
+				senderID,
+				receiverID,
+			})
+		}
+	}
+
 	return (
 		<Swipable renderRightActions={leftSwipe} onSwipeableRightOpen={ondelete}>
-			<TouchableOpacity
-				disabled
-				onPress={() => alert(`You will be redirected to the post of id ${id} `)}
-				style={styles.card}
-			>
+			<TouchableOpacity onPress={handleNavigation} style={styles.card}>
 				<View style={styles.type}>
 					<FontAwesome5
 						name={type == "like" ? "heart" : "comment-alt"}
@@ -49,16 +92,8 @@ const RenderCards = ({ id, type, user, avatar, time, content, ondelete }) => {
 					/>
 				</View>
 				<View style={styles.content}>
-					<Image
-						source={require("../../aseets/images/user.jpg")}
-						style={styles.avatar}
-					/>
-					{type == "like" ? (
-						<Text>{user} liked your post</Text>
-					) : type == "comment" ? (
-						<Text> {user} commented on your post</Text>
-					) : null}
-					<Text style={styles.timeStamp}>{time}</Text>
+					<Text>{textContent}</Text>
+					<Text style={styles.timeStamp}>{formatTime(time)}</Text>
 				</View>
 			</TouchableOpacity>
 		</Swipable>
@@ -67,44 +102,31 @@ const RenderCards = ({ id, type, user, avatar, time, content, ondelete }) => {
 
 const Notifications = (props) => {
 	const [alignment] = useState(new Animated.Value(0))
-	const [notifications, setNotifications] = useState([
-		{
-			id: 0,
-			type: "like",
-			user: "John Wick",
-			avatar: "../../aseets/images/user.jpg",
-			time: `Today ${new Date().getHours()}:${new Date().getMinutes()}`,
-			content: ``,
-		},
-		{
-			id: 1,
-			type: "comment",
-			user: "John Wick",
-			avatar: "../../aseets/images/user.jpg",
-			time: `Today ${new Date().getHours()}:${new Date().getMinutes()}`,
-			content: `Nice Content! Highly appreciated`,
-		},
-		{
-			id: 3,
-			type: "comment",
-			user: "Simon Jones",
-			avatar: "../../aseets/images/user.jpg",
-			time: `Today ${new Date().getHours()}:${new Date().getMinutes()}`,
-			content: `Such an Amazing Adventure it was! ✌️`,
-		},
-		{
-			id: 4,
-			type: "like",
-			user: "Brad",
-			avatar: "../../aseets/images/user.jpg",
-			time: `Today ${new Date().getHours()}:${new Date().getMinutes()}`,
-			content: ``,
-		},
-	])
+	const [notifications, setNotifications] = useState([])
 
 	const handleDelete = (id) => {
 		const _updatedNotifications = notifications.filter((item) => item.id !== id)
 		setNotifications(_updatedNotifications)
+
+		firebase.firestore().collection("Notifications").doc(id).delete()
+	}
+
+	useEffect(() => {
+		fetchNotifications()
+	}, [])
+
+	const fetchNotifications = async () => {
+		try {
+			let noti = await firebase
+				.firestore()
+				.collection("Notifications")
+				.where("user", "==", props.user.uid)
+				.get()
+			noti = noti.docs.map((item) => ({ id: item.id, ...item.data() }))
+			setNotifications(noti)
+		} catch (error) {
+			Alert.alert(error.message)
+		}
 	}
 
 	const animateBottomTabs = (val) =>
@@ -135,18 +157,19 @@ const Notifications = (props) => {
 				<Text style={styles.heading}>Notifications</Text>
 				<FlatList
 					data={notifications}
-					extraData={notifications}
 					showsVerticalScrollIndicator={false}
 					onScrollBeginDrag={() => animateBottomTabs(1)}
 					onScrollEndDrag={() => animateBottomTabs(0)}
 					renderItem={({ item }) => (
 						<RenderCards
 							id={item.id}
-							user={item.user}
-							avatar={item.avatar}
+							postID={item.postID}
+							navigation={props.navigation}
+							textContent={item.textContent}
+							time={item.timeStamp}
+							senderID={item.senderID}
+							receiverID={item.receiverID}
 							type={item.type}
-							content={item.content}
-							time={item.time}
 							ondelete={() => handleDelete(item.id)}
 						/>
 					)}
@@ -168,4 +191,7 @@ const Notifications = (props) => {
 	)
 }
 
-export default Notifications
+const mapStateToProps = (state) => ({ user: state.rootReducer.user })
+const mapDispatchToProps = (dispatch) => ({})
+const connectComponent = connect(mapStateToProps, mapDispatchToProps)
+export default connectComponent(Notifications)

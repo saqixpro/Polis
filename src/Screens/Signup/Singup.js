@@ -1,12 +1,5 @@
 import React, { Component } from "react"
-import {
-	View,
-	Text,
-	ScrollView,
-	TextInput,
-	TouchableOpacity,
-	SafeAreaView,
-} from "react-native"
+import { View, Text, SafeAreaView } from "react-native"
 import styles from "./styles"
 // import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scrollview';
 import theme from "../../theme"
@@ -14,6 +7,11 @@ import languageJSON from "../../utils/languageJSON.json"
 import { Loader } from "../../utils/Loading"
 import { DatePicker } from "native-base"
 import firebase from "firebase"
+import {
+	ScrollView,
+	TextInput,
+	TouchableOpacity,
+} from "react-native-gesture-handler"
 
 class Signup extends Component {
 	state = {

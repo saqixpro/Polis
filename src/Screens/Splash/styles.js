@@ -11,7 +11,6 @@ const styles = StyleSheet.create({
 	},
 	largeText: {
 		fontSize: 16,
-
 		color: theme.colors.prmaryDark,
 	},
 })

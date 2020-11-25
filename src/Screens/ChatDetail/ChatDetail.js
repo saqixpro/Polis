@@ -3,11 +3,8 @@ import {
 	View,
 	Text,
 	StyleSheet,
-	TextInput,
 	SafeAreaView,
-	TouchableOpacity,
 	ActivityIndicator,
-	FlatList,
 	Image,
 	Animated,
 	Easing,
@@ -23,6 +20,12 @@ import firebase from "firebase"
 import { connect } from "react-redux"
 import { MaterialIcons } from "@expo/vector-icons"
 import * as Notifications from "../../functions/notifications"
+
+import {
+	TouchableOpacity,
+	FlatList,
+	TextInput,
+} from "react-native-gesture-handler"
 
 class ChatDetail extends Component {
 	constructor(props) {
@@ -83,6 +86,17 @@ class ChatDetail extends Component {
 		}
 
 		Notifications.sendExpoNotification(receiver.pushToken, sender.name, message)
+
+		firebase
+			.firestore()
+			.collection("Notifications")
+			.add({
+				user: receiver.id,
+				receiverID: sender.id,
+				type: "message",
+				textContent: `${this.props.user.name} Sent You a Message`,
+				timeStamp: Date.now(),
+			})
 
 		await firebase
 			.database()
@@ -428,12 +442,13 @@ class ChatDetail extends Component {
 							flexDirection: "row",
 							backgroundColor: "#ccc",
 							borderRadius: 8,
+							height: 50,
 						}}
 					>
 						<TextInput
 							style={{
 								padding: 15,
-								width: "80%",
+								width: "90%",
 							}}
 							placeholder={"Write Something Here..."}
 							placeholderTextColor='#555'
@@ -444,7 +459,7 @@ class ChatDetail extends Component {
 							activeOpacity={0.7}
 							disabled={message === "" ? true : false}
 							style={{
-								width: "20%",
+								height: "100%",
 								justifyContent: "center",
 								alignItems: "center",
 							}}

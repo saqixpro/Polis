@@ -1,18 +1,15 @@
 import React, { Component } from "react"
-import {
-	View,
-	Text,
-	TouchableOpacity,
-	Image,
-	TextInput,
-	Keyboard,
-} from "react-native"
+import { View, Text, Image, Keyboard, Alert } from "react-native"
 import styles from "./styles"
-import { FlatList } from "react-native-gesture-handler"
 import Functions from "../../functions/functions"
 import { connect } from "react-redux"
 import { Loader } from "../../utils/Loading"
 import * as ActionTypes from "../../redux/reducers/actionTypes"
+import {
+	TouchableOpacity,
+	TextInput,
+	FlatList,
+} from "react-native-gesture-handler"
 
 class Questions extends Component {
 	state = {
@@ -88,11 +85,16 @@ class Questions extends Component {
 				votes: 0,
 			}
 
-			await Functions.createPost(data)
-			const { posts } = await Functions.fetchPosts(this.props.user.uid)
-			this.props.cachePosts(posts)
-			this.setState({ loading: false })
-			this.props.navigation.navigate("Home")
+			if (this.state.textContent) {
+				await Functions.createPost(data)
+				const { posts } = await Functions.fetchPosts(this.props.user.uid)
+				this.props.cachePosts(posts)
+				this.setState({ loading: false })
+				this.props.navigation.navigate("Home")
+			} else {
+				this.setState({ loading: false })
+				Alert.alert(`Text Content Cannot Be Empty`)
+			}
 		} catch (error) {
 			this.setState({ loading: false })
 			console.log(error)
