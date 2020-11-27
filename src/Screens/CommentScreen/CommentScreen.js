@@ -329,6 +329,14 @@ class CommentScreen extends Component {
 			// add new comment as a child
 			const _data = {
 				textContent: this.state.cmnt,
+				author: this.props.user,
+				likes: [],
+				replies: [],
+				timeStamp: Date.now(),
+			}
+
+			const __data = {
+				textContent: this.state.cmnt,
 				author: this.props.user.uid,
 				likes: [],
 				replies: [],
@@ -344,7 +352,7 @@ class CommentScreen extends Component {
 				.firestore()
 				.collection("comments")
 				.doc(this.state.activeChannel)
-				.set({ replies: [...comment.replies, _data] }, { merge: true })
+				.set({ replies: [...comment.replies, __data] }, { merge: true })
 
 			const updatedComments = comments.map((cmt) =>
 				cmt.id == comment.id ? updatedComment : cmt,
@@ -358,6 +366,11 @@ class CommentScreen extends Component {
 			await this.props.updatePost(updatedPost, this.state.post.id)
 			await Functions.makeComment(data)
 		}
+
+		this.input.blur()
+
+		this.setState({ repliesVisible: true })
+
 		try {
 			const { user } = await Functions.fetchUserById(this.state.post.author)
 

@@ -59,7 +59,9 @@ class Status extends Component {
 		if (this.state.textContent.length > 5) {
 			this.setState({ loading: true })
 
-			await this.uploadImageToServerAsync()
+			if (this.state.imgResult) {
+				await this.uploadImageToServerAsync()
+			}
 
 			const data = {
 				author: this.props.user.uid,
@@ -321,9 +323,9 @@ class Status extends Component {
 								<Button small dark onPress={() => this.handleChoosePhoto()}>
 									<Text style={styles.btnText}>Image</Text>
 								</Button>
-								<Button small dark>
+								{/* <Button small dark>
 									<Text style={styles.btnText}>GIF</Text>
-								</Button>
+								</Button> */}
 								<Button
 									small
 									dark

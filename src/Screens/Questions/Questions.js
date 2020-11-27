@@ -1,5 +1,5 @@
 import React, { Component } from "react"
-import { View, Text, Image, Keyboard, Alert } from "react-native"
+import { View, Text, Image, Keyboard, Alert, SafeAreaView } from "react-native"
 import styles from "./styles"
 import Functions from "../../functions/functions"
 import { connect } from "react-redux"
@@ -110,11 +110,12 @@ class Questions extends Component {
 	render() {
 		return (
 			<View style={{ flex: 1 }}>
+				<SafeAreaView />
 				<View
 					style={{
 						flexDirection: "row",
 						justifyContent: "space-between",
-						marginTop: "5%",
+						width: "90%",
 					}}
 				>
 					<TouchableOpacity

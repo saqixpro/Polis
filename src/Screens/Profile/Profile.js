@@ -35,6 +35,7 @@ import {
 	Ionicons,
 	FontAwesome,
 } from "@expo/vector-icons"
+import * as Notifications from "../../functions/notifications"
 
 class Profile extends Component {
 	constructor(props) {
@@ -59,6 +60,48 @@ class Profile extends Component {
 
 		this.fetchPostsByCurrentUser()
 		this.updateFollowers()
+	}
+
+	likePost = async (id) => {
+		await Functions.likePost(id, this.props.user.uid)
+
+		const _post = this.state.posts.find((post) => post.id == id)
+		const _updatedPost = {
+			..._post,
+			likes: _post.likes
+				? [..._post.likes, this.props.user.uid]
+				: [this.props.user.uid],
+		}
+		const updatedPosts = this.state.posts.map((post) =>
+			post.id == id ? _updatedPost : post,
+		)
+
+		this.setState({ posts: updatedPosts })
+
+		try {
+			const { user } = await Functions.fetchUserById(_post.author.id)
+
+			Notifications.sendExpoNotification(
+				user ? user.expoToken : "test",
+				`Polis`,
+				`${this.props.user.name} liked your Post`,
+			)
+
+			firebase
+				.firestore()
+				.collection("Notifications")
+				.add({
+					user: user.id,
+					postID: id,
+					type: "like",
+					textContent: `${this.props.user.name} liked your POST`,
+					timeStamp: Date.now(),
+				})
+		} catch (error) {
+			Alert.alert(error.message)
+		}
+
+		this.props.cachePosts(updatedPosts)
 	}
 
 	updateFollowers = async () => {
@@ -104,6 +147,23 @@ class Profile extends Component {
 		const timeInMonths = timeInDays / 30
 		if (timeInMonths < 12) return `${timeInMonths.toFixed(0)} months`
 		return `${(timeInMonths / 12).toFixed(0)} y`
+	}
+
+	unlikePost = async (id) => {
+		await Functions.unlikePost(id, this.props.user.uid)
+
+		const __post = this.state.posts.find((post) => post.id == id)
+		const __updatedPost = {
+			...__post,
+			likes: __post.likes.filter((id) => id !== this.props.user.uid),
+		}
+		const _updatedPosts = this.state.posts.map((post) =>
+			post.id == id ? __updatedPost : post,
+		)
+
+		this.setState({ posts: _updatedPosts })
+
+		this.props.cachePosts(updatedPosts)
 	}
 
 	liked = (_id) => {

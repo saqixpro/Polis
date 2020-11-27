@@ -202,7 +202,7 @@ class CommentScreen extends Component {
 						},
 					]}
 				>
-					<View style={{}}>
+					<View style={{ flexDirection: "row" }}>
 						{item.author.avatar ? (
 							<Image
 								source={{ uri: item.author.avatar }}
@@ -403,6 +403,14 @@ class CommentScreen extends Component {
 			const data = {
 				id: Date.now().toString(),
 				textContent: this.state.cmnt,
+				author: this.props.user,
+				likes: [],
+				replies: [],
+				timeStamp: Date.now(),
+			}
+			const da_ta = {
+				id: Date.now().toString(),
+				textContent: this.state.cmnt,
 				author: this.props.user.uid,
 				likes: [],
 				replies: [],
@@ -415,6 +423,13 @@ class CommentScreen extends Component {
 				)
 				// add new comment as a child
 				const _data = {
+					textContent: this.state.cmnt,
+					author: this.props.user,
+					likes: [],
+					replies: [],
+					timeStamp: Date.now(),
+				}
+				const __data = {
 					textContent: this.state.cmnt,
 					author: this.props.user.uid,
 					likes: [],
@@ -431,15 +446,15 @@ class CommentScreen extends Component {
 					cmt.id == comment.id ? updatedComment : cmt,
 				)
 
-				for (let i = 0; i < updatedComments.length; i++) {
-					for (let j = 0; j < updatedComments[i].replies.length; j++) {
-						const node = updatedComments[i].replies[j]
-						const __author =
-							typeof node.author == "string" ? node.author : node.author.uid
-						const { user } = await Functions.fetchUserById(__author)
-						updatedComments[i].replies[j] = { ...node, author: user }
-					}
-				}
+				// for (let i = 0; i < updatedComments.length; i++) {
+				// 	for (let j = 0; j < updatedComments[i].replies.length; j++) {
+				// 		const node = updatedComments[i].replies[j]
+				// 		const __author =
+				// 			typeof node.author == "string" ? node.author : node.author.uid
+				// 		const { user } = await Functions.fetchUserById(__author)
+				// 		updatedComments[i].replies[j] = { ...node, author: user }
+				// 	}
+				// }
 
 				this.listRef.scrollToEnd({ animated: true })
 
@@ -454,15 +469,15 @@ class CommentScreen extends Component {
 					(cmt) => cmt.id == this.state.activeChannel,
 				)
 				const __replies = comment.replies
-					? [...comment.replies, _data]
-					: [_data]
+					? [...comment.replies, __data]
+					: [__data]
 				__comment = { ...__comment, replies: __replies }
 				const __COMMENTS = POD.data().comments.map((cmt) =>
 					cmt.id == this.state.activeChannel ? __comment : cmt,
 				)
 				POD.ref.set({ comments: __COMMENTS }, { merge: true })
 			} else {
-				const comment = { ...data, author: this.props.user }
+				const comment = data
 
 				this.listRef.scrollToEnd({ animated: true })
 
@@ -474,7 +489,7 @@ class CommentScreen extends Component {
 				let _comments = await ref.get()
 				_comments = _comments.data().comments
 
-				await ref.set({ comments: [..._comments, data] }, { merge: true })
+				await ref.set({ comments: [..._comments, da_ta] }, { merge: true })
 			}
 		} catch (error) {
 			Alert.alert(error.message)
@@ -644,7 +659,7 @@ const RenderReplies = ({ item, state, updateState, inputRef, listRef }) => {
 					},
 				]}
 			>
-				<View style={{}}>
+				<View style={{ flexDirection: "row" }}>
 					{item.author.avatar ? (
 						<Image
 							source={{ uri: item.author.avatar }}

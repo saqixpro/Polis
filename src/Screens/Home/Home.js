@@ -11,6 +11,7 @@ import {
 	Share,
 	Linking,
 	Alert,
+	FlatList,
 } from "react-native"
 import styles from "./styles"
 import theme from "../../theme"
@@ -26,7 +27,7 @@ import Constants from "expo-constants"
 import firebase from "firebase"
 import * as Notifications from "../../functions/notifications"
 
-import { FlatList, TouchableOpacity } from "react-native-gesture-handler"
+import { TouchableOpacity } from "react-native-gesture-handler"
 
 const { height, width } = Dimensions.get("screen")
 
@@ -36,7 +37,6 @@ class Home extends Component {
 		this.state = {
 			searc: "",
 			isSearching: false,
-			isRefreshing: false,
 			alignment: new Animated.Value(0),
 			thresholdReached: false,
 			loading: false,
@@ -137,11 +137,10 @@ class Home extends Component {
 		this.props.cachePosts(updatedPosts)
 	}
 
-	refreshPosts = async () => {
+	refreshPosts = () => {
 		this.setState({ refreshing: true })
 		try {
-			await this.fetchPostsForCurrentUser()
-			await this.fetchTrendingPostsAsync()
+			this.fetchPostsForCurrentUser()
 			this.setState({ refreshing: false })
 		} catch (error) {
 			this.setState({ refreshing: false })
@@ -266,11 +265,11 @@ class Home extends Component {
 					)}
 					<View
 						style={{
-							// justifyContent: 'space-around',
+							justifyContent: "space-between",
 							flexDirection: "row",
 							alignSelf: "center",
 							// backgroundColor: 'black',
-							width: "65%",
+							width: "70%",
 						}}
 					>
 						<TouchableOpacity
@@ -281,7 +280,11 @@ class Home extends Component {
 							}
 							style={{ width: "100%" }}
 						>
-							<View style={{ flexDirection: "row" }}>
+							<View
+								style={{
+									flexDirection: "row",
+								}}
+							>
 								<Text
 									style={[{ color: theme.colors.primary, fontWeight: "300" }]}
 								>
@@ -305,6 +308,7 @@ class Home extends Component {
 									fontSize: 12,
 									color: "#8F92A1",
 									fontWeight: "300",
+									alignSelf: "flex-end",
 								},
 							]}
 						>{`${this.formatTime(item.timeStamp)} ago`}</Text>
@@ -528,7 +532,7 @@ class Home extends Component {
 					)}
 					<View
 						style={{
-							// justifyContent: 'space-around',
+							justifyContent: "space-between",
 							flexDirection: "row",
 							alignSelf: "center",
 							// backgroundColor: 'black',
@@ -543,7 +547,13 @@ class Home extends Component {
 							}
 							style={{ width: "100%" }}
 						>
-							<View style={{ flexDirection: "row" }}>
+							<View
+								style={{
+									flexDirection: "row",
+									width: "100%",
+									justifyContent: "space-between",
+								}}
+							>
 								<Text
 									style={[{ color: theme.colors.primary, fontWeight: "300" }]}
 								>
@@ -567,6 +577,7 @@ class Home extends Component {
 									fontSize: 12,
 									color: theme.colors.gray,
 									fontWeight: "300",
+									alignSelf: "flex-end",
 								},
 							]}
 						>{`${this.formatTime(item.timeStamp)} ago`}</Text>
@@ -761,7 +772,7 @@ class Home extends Component {
 									overflow: "hidden",
 									marginTop: 10,
 									marginBottom: 10,
-									fontSize: 19,
+									fontSize: 16,
 									fontWeight: "600",
 								},
 							]}
@@ -775,7 +786,7 @@ class Home extends Component {
 					horizontal
 					style={{
 						position: "absolute",
-						bottom: 20,
+						bottom: Dimensions.get("screen").height > 820 ? 20 : 10,
 						left: 0,
 						right: 0,
 						paddingVertical: 20,
@@ -912,6 +923,8 @@ class Home extends Component {
 	}
 
 	componentDidMount = async () => {
+		const { height } = Dimensions.get("screen")
+		console.log(height)
 		await this.fetchPOD()
 		await this.fetchTrendingPostsAsync()
 		await this.fetchPostsForCurrentUser()
@@ -963,7 +976,7 @@ class Home extends Component {
 								this.setState({ thresholdReached: false })
 							}
 						}}
-						maxToRenderPerBatch={5}
+						maxToRenderPerBatch={10}
 						onScrollEndDrag={() => this.animateBottomTabs(0)}
 						data={[{ tx: "menuBar" }, ...this.state.posts]}
 						scrollEventThrottle={16}

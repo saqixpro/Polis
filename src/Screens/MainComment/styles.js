@@ -22,6 +22,13 @@ const styles = StyleSheet.create({
 		justifyContent: "space-between",
 		width: 40,
 	},
+	userImgStyle: {
+		height: 50,
+		width: 50,
+		borderRadius: 70,
+		margin: 5,
+		alignSelf: "flex-start",
+	},
 	header: {},
 	body: {},
 	content: {
@@ -41,6 +48,10 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		justifyContent: "space-between",
 		marginHorizontal: "10%",
+	},
+
+	horizontal: {
+		flexDirection: "row",
 	},
 
 	actionButton: {
